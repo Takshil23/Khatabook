@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Khata Book</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #111;
+            color: #fff;
+            margin: 0;
+            display: flex;  
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+        }
+        .background-icons {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            background-image:
+                url('https://cdn-icons-png.flaticon.com/512/3075/3075977.png'), /* Dumpling */
+                url('https://cdn-icons-png.flaticon.com/512/1046/1046857.png'), /* Noodles */
+                url('https://cdn-icons-png.flaticon.com/512/3075/3075979.png'), /* Takeout box */
+                url('https://cdn-icons-png.flaticon.com/512/3075/3075975.png'), /* Chopsticks */
+                url('https://cdn-icons-png.flaticon.com/512/3075/3075978.png'); /* Lantern */
+            background-repeat: repeat;
+            background-size: 80px;
+            opacity: 0.09;
+            animation: float 60s linear infinite;
+        }
+        @keyframes float {
+            0% { background-position: 0 0; }
+            100% { background-position: 1000px 1000px; }
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #ff4d4d;
+            z-index: 1;
+        }
+        input, select, button {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 10px;
+            margin: 10px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+            text-align: center;
+            background: #222;
+            color: #fff;
+            z-index: 1;
+        }
+        #menu {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .menu-item {
+            background-color: #222;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.3s;
+            color: #fff;
+            z-index: 1;
+        }
+        .menu-item:hover {
+            background-color: #333;
+        }
+        #cart {
+            margin-top: 20px;
+            text-align: center;
+            z-index: 1;
+        }
+        #cart i {
+            font-size: 1.5rem;
+            color: #ff4d4d;
+            position: relative;
+        }
+        #cart-count {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ff4d4d;
+            color: white;
+            border-radius: 50%;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        .center {
+            text-align: center;
+            z-index: 1;
+        }
+        .nav-buttons {
+            margin-top: 20px;
+        }
+        .nav-buttons button, .center button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin: 10px;
+        }
+        .nav-buttons button:hover, .center button:hover {
+            background-color: #ff1a1a;
+        }
+        .timestamp {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        #floating-noodles {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .noodle-icon {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            opacity: 0.35;
+            border-radius: 50%;
+            border: 2px solid #ff4d4d22;
+            background: #222;
+            z-index: 1001;
+            filter: drop-shadow(0 2px 8px #0008);
+            animation: noodle-float 12s linear infinite;
+        }
+        /* Unique positions and animation delays for each noodle */
+        .noodle1 { left: 5vw;  top: 10vh;  animation-delay: 0s; }
+        .noodle2 { left: 20vw; top: 30vh;  animation-delay: 2s; }
+        .noodle3 { left: 40vw; top: 15vh;  animation-delay: 4s; }
+        .noodle4 { left: 60vw; top: 25vh;  animation-delay: 1s; }
+        .noodle5 { left: 80vw; top: 8vh;   animation-delay: 3s; }
+        .noodle6 { left: 10vw; top: 60vh;  animation-delay: 5s; }
+        .noodle7 { left: 30vw; top: 80vh;  animation-delay: 6s; }
+        .noodle8 { left: 50vw; top: 70vh;  animation-delay: 7s; }
+        .noodle9 { left: 70vw; top: 60vh;  animation-delay: 8s; }
+        .noodle10{ left: 85vw; top: 50vh;  animation-delay: 9s; }
+        @keyframes noodle-float {
+            0%   { transform: translateY(0) scale(1) rotate(0deg); }
+            50%  { transform: translateY(-30px) scale(1.05) rotate(8deg); }
+            100% { transform: translateY(0) scale(1) rotate(0deg); }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Leckerli+One&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <h1>Digital Khata Book</h1>
+    <div id="connBadge" style="position:fixed;top:8px;right:8px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;background:#333;color:#fff;padding:6px 10px;border-radius:999px;border:1px solid #555;opacity:.9;z-index:2000;">Checking…</div>
+    <div class="center">
+        <input type="number" id="contact" placeholder="Contact Number" maxlength="10" oninput="this.value = this.value.slice(0, 10)">
+    </div>
+
+    <div id="menu">
+        <div class="menu-item" onclick="addToCart('Manchurian', 230)">Manchurian - ₹230</div>
+        <div class="menu-item" onclick="addToCart('Paneer Chilly', 250)">Paneer Chilly - ₹250</div>
+        <div class="menu-item" onclick="addToCart('Fried Rice', 230)">Fried Rice - ₹230</div>
+        <div class="menu-item" onclick="addToCart('Chinese Bhel', 230)">Chinese Bhel - ₹230</div>
+        <div class="menu-item" onclick="addToCart('Noodles', 230)">Noodles - ₹230</div>
+    </div>
+
+    <div id="cart" class="center">
+        <i class="fas fa-shopping-cart">
+            <span id="cart-count">0</span>
+        </i>
+        <div id="cart-items"></div>
+        <div>Total: ₹<span id="total-amount">0</span></div>
+        <div class="timestamp">Date: <span id="current-date"></span> | Time: <span id="current-time"></span></div>
+        <div style="margin:10px 0;">
+            <select id="paymentStatus">
+                <option value="Pending">Payment Pending</option>
+                <option value="Done">Payment Done</option>
+            </select>
+            <select id="deliveryStatus">
+                <option value="Pending">Delivery Pending</option>
+                <option value="Delivered">Delivered</option>
+            </select>
+            <select id="paymentMode">
+                <option value="Cash">Cash</option>
+                <option value="Online">Online</option>
+            </select>
+        </div>
+        <button onclick="placeOrder()">Place Order</button>
+        <button onclick="clearCart()">Clear Cart</button>
+    </div>
+
+    <div class="nav-buttons center">
+        <button onclick="window.location.href='all_orders.html'">All Orders</button>
+        <button id="exportExcelBtn" style="background:#17a2b8;">Export to Excel</button>
+    </div>
+
+    <div class="center" style="margin: 20px 0; position: absolute; top: 20px; left: 0; right: 0;">
+        <span style="display:inline-block;background:#fff3cd;color:#856404;padding:10px 20px;border-radius:8px;margin:5px;min-width:150px;">
+            Pending Orders: <span id="pendingOrdersCount">0</span>
+        </span>
+        <span style="display:inline-block;background:#d4edda;color:#155724;padding:10px 20px;border-radius:8px;margin:5px;min-width:150px;">
+            Total Orders: <span id="totalOrdersCount">0</span>
+        </span>
+    </div>
+
+    <!-- Floating noodle icons -->
+    <div id="floating-noodles">
+        <img src="https://cdn-icons-png.flaticon.com/512/1046/1046857.png" class="noodle-icon noodle1" alt="Noodle" />
+        <img src="https://cdn-icons-png.flaticon.com/512/1046/1046857.png" class="noodle-icon noodle2" alt="Noodle" />
+        <img src="https://cdn-icons-png.flaticon.com/512/1046/1046857.png" class="noodle-icon noodle3" alt="Noodle" />
+        <img src="https://cdn-icons-png.flaticon.com/512/1046/1046857.png" class="noodle-icon noodle4" alt="Noodle" />
+        <img src="https://cdn-icons-png.flaticon.com/512/1046/1046857.png" class="noodle-icon noodle5" alt="Noodle" />
+        <img src="https://cdn-icons-png.flaticon.com/512/1046/1046857.png" class="noodle-icon noodle6" alt="Noodle" />
+        <img src="https://cdn-icons-png.flaticon.com/512/1046/1046857.png" class="noodle-icon noodle7" alt="Noodle" />
+        <img src="https://cdn-icons-png.flaticon.com/512/1046/1046857.png" class="noodle-icon noodle8" alt="Noodle" />
+        <img src="https://cdn-icons-png.flaticon.com/512/1046/1046857.png" class="noodle-icon noodle9" alt="Noodle" />
+        <img src="https://cdn-icons-png.flaticon.com/512/1046/1046857.png" class="noodle-icon noodle10" alt="Noodle" />
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.local.js"></script>
+    <script src="db.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script>
+      // Configure backend API base URL here
+      window.API_BASE = 'http://localhost:3000';
+    </script>
+    <script>
+      // Sign in anonymously so Firestore security rules can require auth for writes
+      if (window.firebase && window.FIREBASE_CONFIG) {
+        try {
+          if (firebase.apps && firebase.apps.length === 0) {
+            firebase.initializeApp(window.FIREBASE_CONFIG);
+          }
+          firebase.auth().signInAnonymously().catch(function(){});
+        } catch (e) {}
+      }
+    </script>
+    <script>
+        let cart = [];
+
+        // Removed Google Sheet integration
+
+        function addToCart(item, price) {
+            const existingItem = cart.find(i => i.name === item);
+            if (existingItem) {
+                existingItem.qty++;
+            } else {
+                cart.push({ name: item, price: price, qty: 1 });
+            }
+            updateCart();
+        }
+
+        function updateCart() {
+            const cartItemsDiv = document.getElementById('cart-items');
+            cartItemsDiv.innerHTML = '';
+            let total = 0;
+            cart.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.innerText = `${item.name} x ${item.qty} = ₹${item.price * item.qty}`;
+                cartItemsDiv.appendChild(itemDiv);
+                total += item.price * item.qty;
+            });
+            document.getElementById('total-amount').innerText = total;
+            document.getElementById('cart-count').innerText = cart.reduce((sum, i) => sum + i.qty, 0);
+        }
+
+        async function updateOrderSummary() {
+            try {
+                // If cloud DB is available, read from Firestore for accurate counts
+                if (window.DB && window.DB.isCloud && typeof window.DB.getOrders === 'function') {
+                    const orders = await window.DB.getOrders();
+                    document.getElementById('totalOrdersCount').innerText = orders.length;
+                    document.getElementById('pendingOrdersCount').innerText = orders.filter(o => o.deliveryStatus === 'Pending').length;
+                    return;
+                }
+            } catch (e) {}
+            // Fallback: localStorage
+            let lsOrders = [];
+            try {
+                lsOrders = JSON.parse(localStorage.getItem('khataBookOrders')) || [];
+            } catch (e) {}
+            document.getElementById('totalOrdersCount').innerText = lsOrders.length;
+            document.getElementById('pendingOrdersCount').innerText = lsOrders.filter(o => o.deliveryStatus === 'Pending').length;
+        }
+        // Call on load
+        updateOrderSummary();
+
+        async function placeOrder() {
+            const contact = document.getElementById('contact').value;
+            const paymentStatus = document.getElementById('paymentStatus').value;
+            const deliveryStatus = document.getElementById('deliveryStatus').value;
+            const paymentMode = document.getElementById('paymentMode').value;
+            if (contact.length !== 10) {
+                alert('Please enter a valid 10-digit contact number');
+                return;
+            }
+            if (cart.length === 0) {
+                alert('Cart is empty!');
+                return;
+            }
+            // Prepare order details string
+            const orderDetails = cart.map(item => `${item.name} x${item.qty}`).join(', ');
+            // Prepare order data in KhataBook format
+            const orderData = {
+                customerName: contact,
+                orderDetails: orderDetails,
+                orderDate: new Date().toISOString().split('T')[0],
+                orderAmount: cart.reduce((sum, item) => sum + item.price * item.qty, 0).toFixed(2),
+                paymentStatus: paymentStatus,
+                deliveryStatus: deliveryStatus,
+                paymentMode: paymentMode,
+                items: cart.map(item => ({ name: item.name, quantity: item.qty, price: item.price })),
+                createdAt: new Date().toISOString()
+            };
+            // Try backend first → fallback to adapter/local
+            try {
+                const apiBase = (window.API_BASE || '').trim();
+                if (apiBase) {
+                    const res = await fetch(apiBase + '/orders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(orderData)
+                    });
+                    if (!res.ok) throw new Error('API error');
+                } else {
+                    throw new Error('No API base configured');
+                }
+            } catch (e) {
+                try {
+                    await (window.DB ? window.DB.saveOrder(orderData) : Promise.resolve());
+                } catch (err) {
+                    console.error(err);
+                    alert('Failed to save order');
+                    return;
+                }
+            }
+            alert('Order placed successfully!');
+            cart = [];
+            updateCart();
+            document.getElementById('contact').value = '';
+            // Reset status selects to defaults after successful order
+            try {
+                document.getElementById('paymentStatus').value = 'Pending';
+                document.getElementById('deliveryStatus').value = 'Pending';
+                document.getElementById('paymentMode').value = 'Cash';
+            } catch (e) {}
+            updateOrderSummary();
+        }
+
+        function clearCart() {
+            cart = [];
+            updateCart();
+        }
+
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('current-date').innerText = now.toLocaleDateString();
+            document.getElementById('current-time').innerText = now.toLocaleTimeString();
+        }
+
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // Live updates for counts across multiple users (Firestore or fallback polling)
+        if (window.DB && typeof window.DB.subscribeOrders === 'function') {
+            window.DB.subscribeOrders((orders) => {
+                document.getElementById('totalOrdersCount').innerText = orders.length;
+                document.getElementById('pendingOrdersCount').innerText = orders.filter(o => o.deliveryStatus === 'Pending').length;
+            });
+        } else {
+            // Initial counts
+            updateOrderSummary();
+        }
+
+        // Export to Excel (downloads all orders as .xlsx)
+        async function exportOrdersToExcel() {
+            try {
+                const orders = await (window.DB && typeof window.DB.getOrders === 'function'
+                    ? window.DB.getOrders()
+                    : Promise.resolve(JSON.parse(localStorage.getItem('khataBookOrders') || '[]')));
+                if (!orders || !orders.length) {
+                    alert('No orders to export');
+                    return;
+                }
+                const rows = orders.map(o => ({
+                    'Customer Name': o.customerName || '',
+                    'Order Details': o.orderDetails || '',
+                    'Order Date': o.orderDate || '',
+                    'Order Amount': o.orderAmount || '',
+                    'Payment Status': o.paymentStatus || '',
+                    'Delivery Status': o.deliveryStatus || '',
+                    'Payment Mode': o.paymentMode || '',
+                    'Created At': o.createdAt || ''
+                }));
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(rows);
+                XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+                const dateStr = new Date().toISOString().slice(0,10);
+                XLSX.writeFile(wb, `Orders_${dateStr}.xlsx`);
+            } catch (e) {
+                alert('Failed to export');
+            }
+        }
+        (function(){
+            const exportBtn = document.getElementById('exportExcelBtn');
+            if (exportBtn) exportBtn.addEventListener('click', exportOrdersToExcel);
+        })();
+
+        // Connection badge: show Cloud vs Local and warn for file://
+        (function(){
+          const el = document.getElementById('connBadge')
+          function render() {
+            const isFile = location.protocol === 'file:';
+            const isCloud = !!(window.DB && window.DB.isCloud);
+            if (isFile) {
+              el.textContent = 'Local file – no real-time sync';
+              el.style.background = '#8a2be2';
+              return;
+            }
+            if (isCloud) {
+              el.textContent = 'Cloud sync: Online';
+              el.style.background = '#1e7e34';
+            } else {
+              el.textContent = 'Local mode – syncing disabled';
+              el.style.background = '#6c757d';
+            }
+          }
+          render();
+          setTimeout(render, 1500);
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Orders - Digital Khata Book</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Leckerli+One&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #333;
+        }
+        .center {
+            text-align: center;
+        }
+        .nav-buttons {
+            margin-top: 20px;
+        }
+        .nav-buttons button, .center button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin: 10px;
+        }
+        .nav-buttons button:hover, .center button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>All Orders</h1>
+    <div id="connBadge" style="position:fixed;top:8px;right:8px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;background:#333;color:#fff;padding:6px 10px;border-radius:999px;border:1px solid #555;opacity:.9;z-index:2000;">Checking…</div>
+    <div class="center" style="margin-bottom: 20px;">
+        <button onclick="window.location.href='index.html'">Back to Home</button>
+        <button id="clearAllOrdersBtn" style="background:#dc3545;">Clear All Orders</button>
+        <button id="exportExcelBtn" style="background:#17a2b8;">Export to Excel</button>
+        <select id="statusFilter" style="margin-left:10px;">
+            <option value="all">Show: All</option>
+            <option value="payment_pending">Show: Payment Pending</option>
+            <option value="delivery_pending">Show: Delivery Pending</option>
+            <option value="payment_done">Show: Payment Done</option>
+            <option value="delivered">Show: Delivered</option>
+        </select>
+    </div>
+    <div class="orders-table-container" style="width:90%;max-width:1200px;margin:0 auto;">
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Order Details</th>
+                    <th>Order Date</th>
+                    <th>Order Amount</th>
+                    <th>Payment Status</th>
+                    <th>Payment Mode</th>
+                    <th>Delivery Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+                <!-- Orders will be rendered here -->
+            </tbody>
+        </table>
+    </div>
+     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+     <script src="firebase-config.local.js"></script>
+     <script src="db.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+     <script>
+       // Configure backend API base URL here
+       window.API_BASE = 'http://localhost:3000';
+     </script>
+    <script>
+      if (window.firebase && window.FIREBASE_CONFIG) {
+        try {
+          if (firebase.apps && firebase.apps.length === 0) {
+            firebase.initializeApp(window.FIREBASE_CONFIG);
+          }
+          firebase.auth().signInAnonymously().catch(function(){});
+        } catch (e) {}
+      }
+    </script>
+    
+    
+    <script>
+        // Global functions
+        let lastOrders = [];
+        
+        async function fetchFromApi() {
+            const apiBase = (window.API_BASE || '').trim();
+            if (!apiBase) throw new Error('No API base');
+            const res = await fetch(apiBase + '/orders');
+            if (!res.ok) throw new Error('API error');
+            return res.json();
+        }
+        
+        function applyFilter(orders) {
+            const sel = document.getElementById('statusFilter');
+            const filter = sel ? sel.value : 'all';
+            if (filter === 'all') return orders;
+            if (filter === 'payment_pending') return orders.filter(o => (o.paymentStatus || 'Pending') === 'Pending');
+            if (filter === 'payment_done') return orders.filter(o => (o.paymentStatus || '') === 'Done');
+            if (filter === 'delivery_pending') return orders.filter(o => (o.deliveryStatus || 'Pending') === 'Pending');
+            if (filter === 'delivered') return orders.filter(o => (o.deliveryStatus || '') === 'Delivered');
+            return orders;
+        }
+        
+        async function loadOrders() {
+            try {
+                lastOrders = await fetchFromApi();
+                renderAllOrdersTable(applyFilter(lastOrders));
+            } catch (e) {
+                // Fallback: try adapter/localStorage
+                try {
+                    if (window.DB && typeof window.DB.getOrders === 'function') {
+                        lastOrders = await window.DB.getOrders();
+                        renderAllOrdersTable(applyFilter(lastOrders));
+                    } else {
+                        lastOrders = JSON.parse(localStorage.getItem('khataBookOrders') || '[]');
+                        renderAllOrdersTable(applyFilter(lastOrders));
+                    }
+                } catch (err) {
+                    renderAllOrdersTable([]);
+                }
+            }
+        }
+        
+        function renderAllOrdersTable(orders) {
+            const tbody = document.getElementById('ordersTableBody');
+            if (!orders.length) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:#fff;">No orders found</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = orders.map((order, idx) => `
+                <tr>
+                    <td><strong>${order.customerName || ''}</strong></td>
+                    <td>${order.orderDetails || ''}</td>
+                    <td style="white-space:nowrap;">${order.orderDate || ''}</td>
+                    <td>₹${order.orderAmount || ''}</td>
+                    <td>
+                        <select data-id="${order.id}" onchange="updateOrderStatus('${order.id}', 'payment', this.value)" style="background-color: ${order.paymentStatus === 'Done' ? '#ffebee' : '#ffffff'};">
+                            <option value="Pending" ${order.paymentStatus === 'Pending' ? 'selected' : ''}>Payment Pending</option>
+                            <option value="Done" ${order.paymentStatus === 'Done' ? 'selected' : ''}>Payment Done</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select data-id="${order.id}" onchange="updateOrderStatus('${order.id}', 'mode', this.value)" style="background-color: #fff3cd;">
+                            <option value="Cash" ${order.paymentMode === 'Cash' ? 'selected' : ''}>Cash</option>
+                            <option value="Online" ${order.paymentMode === 'Online' ? 'selected' : ''}>Online</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select data-id="${order.id}" onchange="updateOrderStatus('${order.id}', 'delivery', this.value)" style="background-color: ${order.deliveryStatus === 'Delivered' ? '#000000' : '#ffffff'}; color: ${order.deliveryStatus === 'Delivered' ? '#ffffff' : '#000000'};">
+                            <option value="Pending" ${order.deliveryStatus === 'Pending' ? 'selected' : ''}>Delivery Pending</option>
+                            <option value="Delivered" ${order.deliveryStatus === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button onclick="deleteOrder('${order.id}')" style="background:#dc3545;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        async function updateOrderStatus(id, type, value) {
+            const updates = {};
+            if (type === 'payment') updates.paymentStatus = value;
+            if (type === 'delivery') {
+                updates.deliveryStatus = value;
+            }
+            if (type === 'mode') updates.paymentMode = value;
+            
+            // Save to backend first (persists into orders.json)
+            let saved = false;
+            try {
+                const apiBase = (window.API_BASE || '').trim();
+                if (apiBase) {
+                    const res = await fetch(apiBase + '/orders/' + encodeURIComponent(id), {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updates)
+                    });
+                    if (!res.ok) throw new Error('API error');
+                    saved = true;
+                }
+            } catch (e) { 
+                console.log('API save failed, using fallback:', e);
+                saved = false; 
+            }
+            
+            if (!saved) {
+                try {
+                    if (window.DB && typeof window.DB.updateOrder === 'function') {
+                        await window.DB.updateOrder(id, updates);
+                    } else {
+                        const key = 'khataBookOrders';
+                        const arr = JSON.parse(localStorage.getItem(key) || '[]');
+                        const idx = arr.findIndex(o => o.id === id);
+                        if (idx !== -1) {
+                            arr[idx] = { ...arr[idx], ...updates };
+                            localStorage.setItem(key, JSON.stringify(arr));
+                        }
+                    }
+                } catch (e) {
+                    alert('Failed to update');
+                    return;
+                }
+            }
+            
+            // Update local data and re-render
+            const orderIndex = lastOrders.findIndex(o => o.id === id);
+            if (orderIndex !== -1) {
+                lastOrders[orderIndex] = { ...lastOrders[orderIndex], ...updates };
+                renderAllOrdersTable(applyFilter(lastOrders));
+            }
+        }
+        async function deleteOrder(id) {
+            if (!confirm('Are you sure you want to delete this order?')) return;
+            try {
+                await (window.DB ? window.DB.deleteOrder(id) : Promise.resolve());
+            } catch (e) {
+                alert('Failed to delete');
+            }
+        }
+         // Export to Excel
+         async function exportOrdersToExcel() {
+             try {
+                 // Use the current orders from the API (lastOrders) which includes all status updates
+                 if (!lastOrders || !lastOrders.length) {
+                     alert('No orders to export');
+                     return;
+                 }
+                 
+                 const rows = lastOrders.map(o => ({
+                     'Customer Name': o.customerName || '',
+                     'Order Details': o.orderDetails || '',
+                     'Order Date': o.orderDate || '',
+                     'Order Amount': o.orderAmount || '',
+                     'Payment Status': o.paymentStatus || '',
+                     'Payment Mode': o.paymentMode || '',
+                     'Delivery Status': o.deliveryStatus || '',
+                     'Created At': o.createdAt || ''
+                 }));
+                 
+                 const wb = XLSX.utils.book_new();
+                 const ws = XLSX.utils.json_to_sheet(rows);
+                 XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+                 const dateStr = new Date().toISOString().slice(0,10);
+                 XLSX.writeFile(wb, `Orders_${dateStr}.xlsx`);
+             } catch (e) {
+                 console.error('Export error:', e);
+                 alert('Failed to export: ' + e.message);
+             }
+         }
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadOrders();
+            setInterval(loadOrders, 5000);
+            const filt = document.getElementById('statusFilter');
+            if (filt) filt.addEventListener('change', function(){
+                renderAllOrdersTable(applyFilter(lastOrders));
+            });
+            document.getElementById('clearAllOrdersBtn').onclick = function() {
+                if (confirm('Are you sure you want to clear ALL orders?')) {
+                    if (window.DB && typeof window.DB.clearAll === 'function') {
+                        window.DB.clearAll();
+                    } else {
+                        localStorage.setItem('khataBookOrders', '[]');
+                        renderAllOrdersTable([]);
+                    }
+                }
+            };
+
+            // Wire export button
+            (function(){
+                const exportBtn = document.getElementById('exportExcelBtn');
+                if (exportBtn) exportBtn.addEventListener('click', exportOrdersToExcel);
+            })();
+
+            // Connection badge
+            (function(){
+                const el = document.getElementById('connBadge');
+                function render(){
+                    const isFile = location.protocol === 'file:';
+                    const isCloud = !!(window.DB && window.DB.isCloud);
+                    if (isFile) {
+                        el.textContent = 'Local file – no real-time sync';
+                        el.style.background = '#8a2be2';
+                        return;
+                    }
+                    if (isCloud) {
+                        el.textContent = 'Cloud sync: Online';
+                        el.style.background = '#1e7e34';
+                    } else {
+                        el.textContent = 'Local mode – syncing disabled';
+                        el.style.background = '#6c757d';
+                    }
+                }
+                render();
+                setTimeout(render, 1500);
+            })();
+        });
+    </script>
+</body>
+</html>
